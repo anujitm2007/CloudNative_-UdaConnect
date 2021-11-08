@@ -1,3 +1,5 @@
+
+
 # UdaConnect
 ## Overview
 ### Background
@@ -7,8 +9,6 @@ Conferences and conventions are hotspots for making connections. Professionals i
 You work for a company that is building a app that uses location data from mobile devices. Your company has built a [POC](https://en.wikipedia.org/wiki/Proof_of_concept) application to ingest location data named UdaTracker. This POC was built with the core functionality of ingesting location and identifying individuals who have shared a close geographic proximity.
 
 Management loved the POC so now that there is buy-in, we want to enhance this application. You have been tasked to enhance the POC application into a [MVP](https://en.wikipedia.org/wiki/Minimum_viable_product) to handle the large volume of location data that will be ingested.
-
-To do so, ***you will refactor this application into a microservice architecture using message passing techniques that you have learned in this course***. It’s easy to get lost in the countless optimizations and changes that can be made: your priority should be to approach the task as an architect and refactor the application into microservices. File organization, code linting -- these are important but don’t affect the core functionality and can possibly be tagged as TODO’s for now!
 
 ### Technologies
 * [Flask](https://flask.palletsprojects.com/en/1.1.x/) - API webserver
@@ -27,8 +27,9 @@ We will be installing the tools that we'll need to use for getting our environme
 1. [Install Docker](https://docs.docker.com/get-docker/)
 2. [Set up a DockerHub account](https://hub.docker.com/)
 3. [Set up `kubectl`](https://rancher.com/docs/rancher/v2.x/en/cluster-admin/cluster-access/kubectl/)
-4. [Install VirtualBox](https://www.virtualbox.org/wiki/Downloads) with at least version 6.0
-5. [Install Vagrant](https://www.vagrantup.com/docs/installation) with at least version 2.0
+4. [Install VirtualBox](https://www.virtualbox.org/wiki/Downloads) with at least version 6.1
+5. [Install Vagrant](https://www.vagrantup.com/docs/installation) with at least version 2.2
+6. [Install Helm](https://helm.sh/docs/intro/install/) with at least version 3.6.3
 
 ### Environment Setup
 To run the application, you will need a K8s cluster running locally and to interface with it via `kubectl`. We will be using Vagrant with VirtualBox to run K3s.
@@ -49,12 +50,11 @@ You will now be connected inside of the virtual OS. Run `sudo cat /etc/rancher/k
 
 Copy the contents from the output issued from your own command into your clipboard -- we will be pasting it somewhere soon!
 ```bash
-$ sudo cat /etc/rancher/k3s/k3s.yaml
-
+master:~ # cat /etc/rancher/k3s/k3s.yaml 
 apiVersion: v1
 clusters:
 - cluster:
-    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJWekNCL3FBREFnRUNBZ0VBTUFvR0NDcUdTTTQ5QkFNQ01DTXhJVEFmQmdOVkJBTU1HR3N6Y3kxelpYSjIKWlhJdFkyRkFNVFU1T1RrNE9EYzFNekFlRncweU1EQTVNVE13T1RFNU1UTmFGdzB6TURBNU1URXdPVEU1TVROYQpNQ014SVRBZkJnTlZCQU1NR0dzemN5MXpaWEoyWlhJdFkyRkFNVFU1T1RrNE9EYzFNekJaTUJNR0J5cUdTTTQ5CkFnRUdDQ3FHU000OUF3RUhBMElBQk9rc2IvV1FEVVVXczJacUlJWlF4alN2MHFseE9rZXdvRWdBMGtSN2gzZHEKUzFhRjN3L3pnZ0FNNEZNOU1jbFBSMW1sNXZINUVsZUFOV0VTQWRZUnhJeWpJekFoTUE0R0ExVWREd0VCL3dRRQpBd0lDcERBUEJnTlZIUk1CQWY4RUJUQURBUUgvTUFvR0NDcUdTTTQ5QkFNQ0EwZ0FNRVVDSVFERjczbWZ4YXBwCmZNS2RnMTF1dCswd3BXcWQvMk5pWE9HL0RvZUo0SnpOYlFJZ1JPcnlvRXMrMnFKUkZ5WC8xQmIydnoyZXpwOHkKZ1dKMkxNYUxrMGJzNXcwPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJlRENDQVIyZ0F3SUJBZ0lCQURBS0JnZ3Foa2pPUFFRREFqQWpNU0V3SHdZRFZRUUREQmhyTTNNdGMyVnkKZG1WeUxXTmhRREUyTXpBM09EUXhPRFV3SGhjTk1qRXdPVEEwTVRrek5qSTFXaGNOTXpFd09UQXlNVGt6TmpJMQpXakFqTVNFd0h3WURWUVFEREJock0zTXRjMlZ5ZG1WeUxXTmhRREUyTXpBM09EUXhPRFV3V1RBVEJnY3Foa2pPClBRSUJCZ2dxaGtqT1BRTUJCd05DQUFRL3lSYlZBL3Y1VUIrVDVoN0RkaXZLMHViS1lDa0pUUTZxRXJDbFhuNUoKd2U0MU5SamNHcW8wWllpYVZUTVFYQXlaeE5mM2dmK3J0dURxTml3ZlR2cHBvMEl3UURBT0JnTlZIUThCQWY4RQpCQU1DQXFRd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBZEJnTlZIUTRFRmdRVUJNNVl5ZW5NUXh3WWN1bmtXYiszCnptdmZoYzB3Q2dZSUtvWkl6ajBFQXdJRFNRQXdSZ0loQUw2c29oR3F1UkVEZEVhdjdzTWpITVNWYXhHNnBMcVkKc01HMndLSGtPaVdiQWlFQS9kdkQzK1BaYWhpZy9xdzFSVkFhZGJFdnFnQkUyRjJtZytQVTd1OTRYZ1U9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
     server: https://127.0.0.1:6443
   name: default
 contexts:
@@ -68,34 +68,130 @@ preferences: {}
 users:
 - name: default
   user:
-    password: 485084ed2cc05d84494d5893160836c9
-    username: admin
+    client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJrVENDQVRlZ0F3SUJBZ0lJVkFON0FuVUEzUlV3Q2dZSUtvWkl6ajBFQXdJd0l6RWhNQjhHQTFVRUF3d1kKYXpOekxXTnNhV1Z1ZEMxallVQXhOak13TnpnME1UZzFNQjRYRFRJeE1Ea3dOREU1TXpZeU5Wb1hEVEl5TURrdwpOREU1TXpZeU5Wb3dNREVYTUJVR0ExVUVDaE1PYzNsemRHVnRPbTFoYzNSbGNuTXhGVEFUQmdOVkJBTVRESE41CmMzUmxiVHBoWkcxcGJqQlpNQk1HQnlxR1NNNDlBZ0VHQ0NxR1NNNDlBd0VIQTBJQUJIUFk5ZU5mSE1IYXRGMlQKUEVCcUNTVSt0ZkRRY1Q4UDYxSVRQTjJycnBraVJSSlJwVnNBK1g3ZDRwRzBzVVlIN1I4VEFlRnBKeHM5b2RtcgpHeFg0N2xLalNEQkdNQTRHQTFVZER3RUIvd1FFQXdJRm9EQVRCZ05WSFNVRUREQUtCZ2dyQmdFRkJRY0RBakFmCkJnTlZIU01FR0RBV2dCU05rRENsd1Y4bUY4aE9LNmhMbnRXWlZwQ3J3REFLQmdncWhrak9QUVFEQWdOSUFEQkYKQWlCNEhzY1RGUmxnc2hjQ2tjVnlLNkNTMEswMWhLZUkzK0dObUhWTFBwczhSZ0loQU9ScERFZU9MMm8zYkl5SQpXNkVWVUdEZEphTzdsalpxY0ZxVnBmT2VBTytoCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0KLS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJkekNDQVIyZ0F3SUJBZ0lCQURBS0JnZ3Foa2pPUFFRREFqQWpNU0V3SHdZRFZRUUREQmhyTTNNdFkyeHAKWlc1MExXTmhRREUyTXpBM09EUXhPRFV3SGhjTk1qRXdPVEEwTVRrek5qSTFXaGNOTXpFd09UQXlNVGt6TmpJMQpXakFqTVNFd0h3WURWUVFEREJock0zTXRZMnhwWlc1MExXTmhRREUyTXpBM09EUXhPRFV3V1RBVEJnY3Foa2pPClBRSUJCZ2dxaGtqT1BRTUJCd05DQUFUc3BsRGE5bHd2aTB0VTFZWlQ5RFV1b2JvWGxXQkxtN0drYWhnL1RrbW0KVEx5RmdmYnJMVnZmcGxwekcvS1RlSDBsZnRtamtsakRwVkxKM0lzOTB5U3NvMEl3UURBT0JnTlZIUThCQWY4RQpCQU1DQXFRd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBZEJnTlZIUTRFRmdRVWpaQXdwY0ZmSmhmSVRpdW9TNTdWCm1WYVFxOEF3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUloQU5teC9vRmZLeGlkQzI3QUk4TUFRTFM1SklobGlNWk0KaGpaMytMbU51bUE2QWlCbHFIclRERGtOZkUxdHdOMUUvUlE5UG1KYm5rYVRWOTF5eHJnSUMwSDlSUT09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    client-key-data: LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSUJMWFMwMVg3WnoyRnNGR1NBMXJYSTlDci9lQzF1YW15Tm1nTG5rWElVYTFvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFYzlqMTQxOGN3ZHEwWFpNOFFHb0pKVDYxOE5CeFB3L3JVaE04M2F1dW1TSkZFbEdsV3dENQpmdDNpa2JTeFJnZnRIeE1CNFdrbkd6MmgyYXNiRmZqdVVnPT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo=
+
 ```
 Type `exit` to exit the virtual OS and you will find yourself back in your computer's session. Create the file (or replace if it already exists) `~/.kube/config` and paste the contents of the `k3s.yaml` output here.
 
 Afterwards, you can test that `kubectl` works by running a command like `kubectl describe services`. It should not return any errors.
 
+
 ### Steps
-1. `kubectl apply -f deployment/db-configmap.yaml` - Set up environment variables for the pods
-2. `kubectl apply -f deployment/db-secret.yaml` - Set up secrets for the pods
-3. `kubectl apply -f deployment/postgres.yaml` - Set up a Postgres database running PostGIS
-4. `kubectl apply -f deployment/udaconnect-api.yaml` - Set up the service and deployment for the API
-5. `kubectl apply -f deployment/udaconnect-app.yaml` - Set up the service and deployment for the web app
-6. `sh scripts/run_db_command.sh <POD_NAME>` - Seed your database against the `postgres` pod. (`kubectl get pods` will give you the `POD_NAME`)
 
-Manually applying each of the individual `yaml` files is cumbersome but going through each step provides some context on the content of the starter project. In practice, we would have reduced the number of steps by running the command against a directory to apply of the contents: `kubectl apply -f deployment/`.
+1. kafka
+######  install helm in vm
+```sh
+vagrant@master:~> curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+vagrant@master:~> chmod 700 get_helm.sh
+vagrant@master:~> ./get_helm.sh
+Downloading https://get.helm.sh/helm-v3.6.3-linux-amd64.tar.gz
+Verifying checksum... Done.
+Preparing to install helm into /usr/local/bin
+helm installed into /usr/local/bin/helm
+vagrant@master:~> helm version
+version.BuildInfo{Version:"v3.6.3", GitCommit:"d506314abfb5d21419df8c7e7e68012379db2354", GitTreeState:"clean", GoVersion:"go1.16.5"}
+vagrant@master:~> 
+```
+###### install kafka in kubernetes via helm
+```
+master:~ # helm repo add bitnami https://charts.bitnami.com/bitnami
+"bitnami" has been added to your repositories
+master:~ # export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+master:~ # helm install my-release bitnami/kafka
+NAME: my-release
+LAST DEPLOYED: Sun Sep  5 02:18:58 2021
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+** Please be patient while the chart is being deployed **
 
-Note: The first time you run this project, you will need to seed the database with dummy data. Use the command `sh scripts/run_db_command.sh <POD_NAME>` against the `postgres` pod. (`kubectl get pods` will give you the `POD_NAME`). Subsequent runs of `kubectl apply` for making changes to deployments or services shouldn't require you to seed the database again!
+Kafka can be accessed by consumers via port 9092 on the following DNS name from within your cluster:
+
+    my-release-kafka.default.svc.cluster.local
+
+Each Kafka broker can be accessed by producers via port 9092 on the following DNS name(s) from within your cluster:
+
+    my-release-kafka-0.my-release-kafka-headless.default.svc.cluster.local:9092
+
+To create a pod that you can use as a Kafka client run the following commands:
+
+    kubectl run my-release-kafka-client --restart='Never' --image docker.io/bitnami/kafka:2.8.0-debian-10-r84 --namespace default --command -- sleep infinity
+    kubectl exec --tty -i my-release-kafka-client --namespace default -- bash
+
+    PRODUCER:
+        kafka-console-producer.sh \
+            
+            --broker-list my-release-kafka-0.my-release-kafka-headless.default.svc.cluster.local:9092 \
+            --topic test
+
+    CONSUMER:
+        kafka-console-consumer.sh \
+            
+            --bootstrap-server my-release-kafka.default.svc.cluster.local:9092 \
+            --topic test \
+            --from-beginning
+master:~ # 
+```
+verify
+```
+master:~ # kubectl get pods
+NAME                              READY   STATUS    RESTARTS   AGE
+my-release-zookeeper-0            1/1     Running   0          3m17s
+my-release-kafka-0                1/1     Running   0          3m17s
+master:~ # 
+```
+
+2. person
+```
+$ cd modules/person/
+$ kubectl apply -f deployment/
+```
+once the pods are up include postgres person, populate the db
+
+```
+bash scripts/run_db_command.sh <POSTGRES POD NAME>
+```
+
+
+3. connection
+```
+$ cd modules/connection/
+$ kubectl apply -f deployment/
+
+```
+
+once the pods are up include postgres connection, populate the db
+
+```
+bash scripts/run_db_command.sh <POSTGRES POD NAME>
+```
+
+
+4. location-event-producer
+```
+$ cd modules/connection/
+$ kubectl apply -f deployment/
+```
+
+5. location-event-consumer
+```
+$ cd modules/connection/
+$ kubectl apply -f deployment/
+```
+
+
+6. frontend
+```
+$ cd modules/frontend/
+$ kubectl apply -f deployment/
+```
+
 
 ### Verifying it Works
-Once the project is up and running, you should be able to see 3 deployments and 3 services in Kubernetes:
-`kubectl get pods` and `kubectl get services` - should both return `udaconnect-app`, `udaconnect-api`, and `postgres`
 
-
-These pages should also load on your web browser:
-* `http://localhost:30001/` - OpenAPI Documentation
-* `http://localhost:30001/api/` - Base path for API
-* `http://localhost:30000/` - Frontend ReactJS Application
 
 #### Deployment Note
 You may notice the odd port numbers being served to `localhost`. [By default, Kubernetes services are only exposed to one another in an internal network](https://kubernetes.io/docs/concepts/services-networking/service/). This means that `udaconnect-app` and `udaconnect-api` can talk to one another. For us to connect to the cluster as an "outsider", we need to a way to expose these services to `localhost`.
